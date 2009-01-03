@@ -49,12 +49,12 @@ func gitPush(medSdkDir, branch string) (err error) {
 		if err != nil {
 			return
 		}
-		err = util.RunCmdCD(medSdkDir, "git", "push", "-f", "origin", branch)
-		if err != nil {
-			return
-		}
 	} else {
-		util.Infof("无改动，无提交动作")
+		util.Infof("无改动文件")
+	}
+	err = util.RunCmdCD(medSdkDir, "git", "push", "-f", "origin", branch)
+	if err != nil {
+		return
 	}
 	util.Infof("提交完成")
 	return
