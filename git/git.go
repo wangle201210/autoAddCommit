@@ -42,19 +42,12 @@ func gitPush(medSdkDir, branch string) (err error) {
 	if err != nil {
 		return
 	}
-	var gitStatus string
-	gitStatus, _ = util.RunCmdRetCD(medSdkDir, "git", "status", "--porcelain")
-	if gitStatus != "" {
-		err = util.RunCmdCD(medSdkDir, "git", "commit", "-m", "update from local")
-		if err != nil {
-			return
-		}
-		err = util.RunCmdCD(medSdkDir, "git", "push", "-f", "origin", branch)
-		if err != nil {
-			return
-		}
-	} else {
-		util.Infof("无改动，无提交动作")
+	err = util.RunCmdCD(medSdkDir, "git", "commit", "-m", "update from local")
+	if err != nil {
+		return
+	}
+	err = util.RunCmdCD(medSdkDir, "git", "push", "-f", "origin", branch)
+	if err != nil {
 		return
 	}
 	util.Infof("提交完成")
