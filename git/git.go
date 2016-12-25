@@ -18,9 +18,9 @@ func Run() {
 	if err := gitPush("./", branch); err != nil {
 		return
 	}
-	if err := changeTime(); err != nil {
-		return
-	}
+	//if err := changeTime(); err != nil {
+	//	return
+	//}
 }
 
 func addFile() (err error){
@@ -45,7 +45,9 @@ func gitPush(medSdkDir, branch string) (err error) {
 	var gitStatus string
 	gitStatus, _ = util.RunCmdRetCD(medSdkDir, "git", "status", "--porcelain")
 	if gitStatus != "" {
+		//git commit --amend --date="Sun, 25 Dec 2016 19:42:09 +0800"
 		err = util.RunCmdCD(medSdkDir, "git", "commit", "-m", "update from local")
+		err = util.RunCmdCD(medSdkDir, "git", "commit", "--amend", "--date=\"Sun, 25 Dec 2016 19:42:09 +0800\"")
 		if err != nil {
 			return
 		}
