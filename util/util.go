@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/fatih/color"
+	"math/rand"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 var (
@@ -68,4 +70,25 @@ func Infof(format string, args ...interface{}) {
 
 func Errorf(format string, args ...interface{}) {
 	color.Red(format+"\n", args...)
+}
+
+//二倍均值算法,count剩余个数,amount剩余时间
+func DoubleAverage(count, total int) int {
+	if count == 1 {
+		//返回剩余时间
+		return total
+	}
+	// 提交间隔至少 1h
+	min := 60 * 60
+	//计算最大可用时间,min最小是1分钱,减去的min,下面会加上,避免出现0分钱
+	max := total - min*count
+	//计算最大可用平均值
+	avg := max / count
+	//二倍均值基础加上最小时间,防止0出现,作为上限
+	avg2 := 2*avg + min
+	//随机commit时间序列元素,把二倍均值作为随机的最大数
+	rand.Seed(time.Now().UnixNano())
+	//加min是为了避免出现0值,上面也减去了min
+	x := rand.Intn(avg2) + min
+	return x
 }

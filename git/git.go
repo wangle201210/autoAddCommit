@@ -1,11 +1,16 @@
 package git
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"git.medlinker.com/wanghouwei/autoAddCommit/file"
 	"git.medlinker.com/wanghouwei/autoAddCommit/util"
+	"io"
 	"math/rand"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -15,7 +20,14 @@ var (
 	startTime time.Time
 	maxTimes  = 100
 	baseDir   = ""
+	commitTimes = 50
 )
+
+type commit struct {
+	Date string `json:"date"`
+	Hash string `json:"hash"`
+	Msg string `json:"msg"`
+}
 
 func changeDate() {
 	id, _ := getCommitID()
@@ -31,13 +43,20 @@ func changeDate() {
 }
 
 func Run(dir string) {
-	//changeDate()
-	//return
-	//dir = "/Users/med/mine/goPkgLearn"
-	baseDir = dir
 	now := time.Now()
 	// 前推4个月
 	startTime = now.Add(time.Second * -1 * 60 * 60 * 24 * 30 * 4)
+	//changeDate()
+	//return
+	//dir = "/Users/med/mine/goPkgLearn"
+	// 最后50次
+	log := getCommitLog(commitTimes)
+	if len(log) == commitTimes {
+		util.Infof("commit log 已经够分配")
+		deviceCommit(log)
+		return
+	}
+	baseDir = dir
 	if err := getBranch(); err != nil {
 		util.Errorf("getBranch err (%+v)", err)
 		return
@@ -180,4 +199,48 @@ func getTime() {
 		return
 	}
 	startTime = startTime.Add(time.Second * time.Duration(randNum))
+}
+
+// 如果以前的commit 够用了，则直接随机分配
+//git log -n 5 --pretty=format:"%cI | %H | %s" > abc.txt
+func getCommitLog(times int) (res []commit) {
+	err := util.RunCmd("git", "log", "-n", strconv.Itoa(times), "--pretty=format:\"{\\\"date\\\":\\\"%cI\\\",\\\"hash\\\":\\\"%H\\\",\\\"msg\\\":\\\"%s\\\"}\" > commit.log")
+	if err != nil {
+		util.Errorf("git log err (%+v)", err)
+		return
+	}
+	// 读取
+	f, err := os.Open("commit.log")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	rd := bufio.NewReader(f)
+	for {
+		line, err := rd.ReadBytes('\n') //以'\n'为结束符读入一行
+		if err != nil || io.EOF == err {
+			break
+		}
+		r := commit{}
+		if err = json.Unmarshal(line, &r); err != nil {
+			util.Errorf("Unmarshal err (%+v)", err)
+			return
+		}
+		res = append(res, r)
+	}
+	return
+}
+
+func deviceCommit(list []commit)  {
+	l :=  len(list)
+	// 4个月
+	total := 60 * 60 * 24 * 30 * 4
+	timeList := []int{total}
+	for i := 0; i < len(list); i++ {
+		reduce := util.DoubleAverage(l, total)
+		total-= reduce
+		l--
+		println(reduce)
+		timeList = append(timeList, total)
+	}
 }
