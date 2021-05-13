@@ -57,7 +57,7 @@ func GetFiles(dir string) (result []File) {
 				result = append(result, File{
 					Dir: path,
 					Name: info.Name(),
-					Path: s + "mainFile/" + path[len(dir)+1:],
+					Path: s + "/mainFile/" + path[len(dir)+1:],
 				})
 			}
 		}
