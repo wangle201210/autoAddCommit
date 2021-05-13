@@ -12,6 +12,8 @@ var (
 	branch string
 	files []file.File
 	startTime time.Time
+	maxTimes = 3
+	baseDir = "/Users/med/mine/goPkgLearn"
 )
 
 func Run() {
@@ -21,7 +23,7 @@ func Run() {
 		util.Errorf("getBranch err (%+v)", err)
 		return
 	}
-	for i := 0; startTime.Unix() < now.Unix() && i < 5; i++ {
+	for i := 0; startTime.Unix() < now.Unix() && i < maxTimes; i++ {
 		util.Infof("第 %d 次开始", i)
 		getTime()
 		f, err := addFile();
@@ -103,30 +105,6 @@ func getCommitID() (commit string, err error) {
 	return
 }
 
-func changeTime() (err error) {
-	util.Infof("开始修改时间")
-	id, err := getCommitID()
-	if err != nil {
-		return
-	}
-	gad := "Fri Jan 2 21:38:53 2009 -0800"
-	gcd := "Sat May 19 01:01:01 2007 -0700"
-	cmd := fmt.Sprintf(`\
-		'if [ $GIT_COMMIT = %s ]
-		then
-		export GIT_AUTHOR_DATE="%s"
-		export GIT_COMMITTER_DATE="%s"
-		fi'
-	`, id, gad, gcd)
-	err = util.RunCmd("git", "filter-branch", "-f", "--env-filter", cmd)
-	if err != nil {
-		util.Errorf("getCommitID err (%+v)", err)
-		return
-	}
-	util.Infof("修改时间完成")
-	return
-}
-
 func commitMsg(f file.File) (msg string) {
 	// todo 添加文件名字
 	l := len(util.DoString)
@@ -140,7 +118,7 @@ func commitMsg(f file.File) (msg string) {
 }
 
 func getFile() (f file.File) {
-	dir := "/Users/med/mine/goPkgLearn/web"
+	dir := baseDir
 	l := len(files)
 	if l == 0 {
 		files = file.GetFiles(dir)
