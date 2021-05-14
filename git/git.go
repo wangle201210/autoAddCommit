@@ -13,10 +13,11 @@ var (
 	files []file.File
 	startTime time.Time
 	maxTimes = 10
-	baseDir = "/Users/med/mine/goPkgLearn"
+	baseDir = ""
 )
 
-func Run() {
+func Run(dir string) {
+	baseDir = dir
 	now := time.Now()
 	startTime = now.Add(time.Second * -1 * 60 * 60 * 24 * 30 * 3)
 	if err := getBranch(); err != nil {
