@@ -24,7 +24,7 @@ func Run() {
 		return
 	}
 	for i := 1; startTime.Unix() < now.Unix() && i < maxTimes; i++ {
-		util.Infof("第 %d 次开始", i)
+		util.Infof("=========== 第 %d 次开始 ===========", i)
 		getTime()
 		f, err := addFile();
 		if err != nil {
