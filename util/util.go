@@ -8,6 +8,12 @@ import (
 	"github.com/fatih/color"
 )
 
+var (
+	DoString = []string{
+		"add", "set", "edit", "alert", "modify", "addition", "increase", "cut", "del", "fix",
+	}
+)
+
 var flagVerbose bool
 
 // RunCmd runs the cmd & print output (both stdout & stderr)
@@ -16,6 +22,7 @@ func RunCmd(name string, arg ...string) (err error) {
 }
 
 func RunCmdCD(cd, name string, arg ...string) (err error) {
+	logf("RunCmdCD: %s", strings.Join(append([]string{cd, name}, arg...), " "))
 	cmd := exec.Command(name, arg...)
 	cmd.Dir = cd
 	out, err := cmd.CombinedOutput()

@@ -1,11 +1,13 @@
 package main
 
-import "github.com/wangle201210/autoAddCommit/git"
+import (
+	"git.medlinker.com/wanghouwei/autoAddCommit/git"
+	"math/rand"
+	"time"
+)
 
 func main() {
-	// add sth
-	// add sth2
-	// add sth3
+	rand.Seed(time.Now().Unix())
 	git.Run()
 }
 
