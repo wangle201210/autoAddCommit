@@ -52,11 +52,14 @@ func GetFiles(dir string) (result []File) {
 	}
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
-			result = append(result, File{
-				Dir: path,
-				Name: info.Name(),
-				Path: s + "mainFile/" + path[len(dir)+1:],
-			})
+			println(path)
+			if !strings.Contains(path, ".git") {
+				result = append(result, File{
+					Dir: path,
+					Name: info.Name(),
+					Path: s + "mainFile/" + path[len(dir)+1:],
+				})
+			}
 		}
 		return nil
 	})
