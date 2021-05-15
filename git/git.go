@@ -76,6 +76,7 @@ func gitPush(medSdkDir, branch string, f file.File) (err error) {
 	}
 	err = util.RunCmdCD(medSdkDir, "git", "push", "-f", "origin", branch)
 	if err != nil {
+		util.Errorf("git push err (%+v)", err)
 		return
 	}
 	util.Infof("提交完成")
