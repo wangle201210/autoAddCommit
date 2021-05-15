@@ -1,4 +1,5 @@
 #!/bin/bash
 
-go build main.go
-./main
+go install
+cd /Users/med/work/git/wanghouwei/autoAddCommit
+autoAddCommit

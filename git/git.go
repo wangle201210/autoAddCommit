@@ -16,7 +16,22 @@ var (
 	baseDir = ""
 )
 
+func changeDate()  {
+	//git rev-parse HEAD
+	id, _ := getCommitID()
+	cmd := `if [ $GIT_COMMIT = %s ]; then export GIT_AUTHOR_DATE="%s" export GIT_COMMITTER_DATE="%s"; fi`
+	t := startTime.Format("2006-01-02 15:04:05")
+	cmdString := fmt.Sprintf(cmd, id, t, t)
+	ret, err := util.RunCmdRet("git", "filter-branch", "-f", "--env-filter", cmdString)
+	fmt.Printf("err (%+v)", err)
+	fmt.Printf("ret (%+v)",ret)
+
+}
+
 func Run(dir string) {
+	//changeDate()
+	//return
+	dir = "/Users/med/mine/goPkgLearn"
 	baseDir = dir
 	now := time.Now()
 	startTime = now.Add(time.Second * -1 * 60 * 60 * 24 * 30 * 3)
@@ -65,6 +80,7 @@ func gitPush(medSdkDir, branch string, f file.File) (err error) {
 		date := startTime.Unix()
 		dateString := fmt.Sprintf("--date=%d", date)
 		err = util.RunCmdCD(medSdkDir, "git", "commit", msgString, dateString)
+		changeDate()
 		if err != nil {
 			util.Errorf("git commit err (%+v)", err)
 			return

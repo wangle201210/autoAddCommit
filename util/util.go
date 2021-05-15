@@ -42,9 +42,7 @@ func RunCmdRet(name string, arg ...string) (out string, err error) {
 }
 
 func RunCmdRetCD(cd, name string, arg ...string) (out string, err error) {
-	if flagVerbose {
-		logf("CMD: %s", strings.Join(append([]string{name}, arg...), " "))
-	}
+	logf("CMD: %s", strings.Join(append([]string{name}, arg...), " "))
 	cmd := exec.Command(name, arg...)
 	cmd.Dir = cd
 	outBytes, err := cmd.CombinedOutput()
