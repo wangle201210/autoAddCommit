@@ -50,7 +50,6 @@ func GetFiles(dir string) (result []File) {
 	}
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
-			println(path)
 			if !strings.Contains(path, ".git") &&
 				!strings.Contains(path, ".DS_Store") &&
 				!strings.Contains(path, ".idea"){

@@ -70,6 +70,7 @@ func gitPush(medSdkDir, branch string, f file.File) (err error) {
 		}
 	} else {
 		util.Infof("无改动文件")
+		return
 	}
 	err = util.RunCmdCD(medSdkDir, "git", "push", "-f", "origin", branch)
 	if err != nil {
