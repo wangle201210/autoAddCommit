@@ -2,10 +2,8 @@ package file
 
 import (
 	"bufio"
-	"errors"
 	"git.medlinker.com/wanghouwei/autoAddCommit/util"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strings"
@@ -53,7 +51,9 @@ func GetFiles(dir string) (result []File) {
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
 			println(path)
-			if !strings.Contains(path, ".git") {
+			if !strings.Contains(path, ".git") &&
+				!strings.Contains(path, ".DS_Store") &&
+				!strings.Contains(path, ".idea"){
 				result = append(result, File{
 					Dir: path,
 					Name: info.Name(),
@@ -67,20 +67,10 @@ func GetFiles(dir string) (result []File) {
 }
 
 func getCurrentPath() (string, error) {
-	file, err := exec.LookPath(os.Args[0])
+	getwd, err := os.Getwd()
 	if err != nil {
+		util.Errorf("Getwd err (%+v)", err)
 		return "", err
 	}
-	path, err := filepath.Abs(file)
-	if err != nil {
-		return "", err
-	}
-	i := strings.LastIndex(path, "/")
-	if i < 0 {
-		i = strings.LastIndex(path, "\\")
-	}
-	if i < 0 {
-		return "", errors.New(`error: Can't find "/" or "\".`)
-	}
-	return string(path[0 : i+1]), nil
+	return getwd, nil
 }
