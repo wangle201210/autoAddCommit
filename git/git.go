@@ -12,7 +12,7 @@ var (
 	branch string
 	files []file.File
 	startTime time.Time
-	maxTimes = 3
+	maxTimes = 10
 	baseDir = "/Users/med/mine/goPkgLearn"
 )
 
@@ -23,7 +23,7 @@ func Run() {
 		util.Errorf("getBranch err (%+v)", err)
 		return
 	}
-	for i := 0; startTime.Unix() < now.Unix() && i < maxTimes; i++ {
+	for i := 1; startTime.Unix() < now.Unix() && i < maxTimes; i++ {
 		util.Infof("第 %d 次开始", i)
 		getTime()
 		f, err := addFile();
@@ -34,9 +34,6 @@ func Run() {
 			return
 		}
 	}
-	//if err := changeTime(); err != nil {
-	//	return
-	//}
 }
 
 func addFile() (f file.File ,err error) {
