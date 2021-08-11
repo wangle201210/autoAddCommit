@@ -5,9 +5,12 @@ import (
 	"github.com/wangle201210/autoAddCommit/util"
 )
 
+var branch string
+
 func Run() {
+	getBranch()
 	addFile()
-	gitPush("./","master")
+	gitPush("./", branch)
 }
 
 func addFile() {
@@ -35,6 +38,15 @@ func gitPush(medSdkDir, branch string) (err error) {
 		}
 	} else {
 		util.Infof("无改动，无上传动作\n")
+	}
+	return
+}
+
+// 获取当前分支名
+func getBranch() (err error) {
+	branch, err = util.RunCmdRet("git", "rev-parse", "--abbrev-ref", "HEAD")
+	if err != nil {
+		return
 	}
 	return
 }
