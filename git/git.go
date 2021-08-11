@@ -8,15 +8,25 @@ import (
 var branch string
 
 func Run() {
-	getBranch()
-	addFile()
-	gitPush("./", branch)
+	if err := getBranch(); err != nil {
+		return
+	}
+	if err := addFile(); err != nil {
+		return
+	}
+	if err := gitPush("./", branch); err != nil {
+		return
+	}
 }
 
-func addFile() {
-	if err := file.CopyFile("/Users/med/mine/github/autoAddCommit/color.go","/Users/med/mine/goPkgLearn/color/color.go"); err != nil {
-		println(err.Error())
+func addFile() (err error){
+	err = file.CopyFile("/Users/med/mine/github/autoAddCommit/color.go","/Users/med/mine/goPkgLearn/color/color.go")
+	if err != nil {
+		util.Errorf("CopyFile err (%+v)", err)
+		return
 	}
+	util.Infof("addFile: %s", branch)
+	return
 }
 
 // 提交修改内容到git
@@ -46,8 +56,9 @@ func gitPush(medSdkDir, branch string) (err error) {
 func getBranch() (err error) {
 	branch, err = util.RunCmdRet("git", "rev-parse", "--abbrev-ref", "HEAD")
 	if err != nil {
-		util.Infof("getBranch err (%+v)", err)
+		util.Errorf("getBranch err (%+v)", err)
 		return
 	}
+	util.Infof("当前分支为: %s", branch)
 	return
 }
