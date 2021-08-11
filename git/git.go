@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"github.com/wangle201210/autoAddCommit/file"
 	"github.com/wangle201210/autoAddCommit/util"
 )
@@ -15,6 +16,9 @@ func Run() {
 		return
 	}
 	if err := gitPush("./", branch); err != nil {
+		return
+	}
+	if err := changeTime(); err != nil {
 		return
 	}
 }
@@ -66,5 +70,40 @@ func getBranch() (err error) {
 		return
 	}
 	util.Infof("当前分支为: %s", branch)
+	return
+}
+
+func getCommitID() (commit string, err error) {
+	util.Infof("正在获取当前CommitId...")
+	commit, err = util.RunCmdRet("git", "rev-parse", "HEAD")
+	if err != nil {
+		util.Errorf("getCommitID err (%+v)", err)
+		return
+	}
+	util.Infof("当前CommitId为: %s", commit)
+	return
+}
+
+func changeTime() (err error) {
+	util.Infof("开始修改时间")
+	id, err := getCommitID()
+	if err != nil {
+		return
+	}
+	gad := "Fri Jan 2 21:38:53 2009 -0800"
+	gcd := "Sat May 19 01:01:01 2007 -0700"
+	cmd := fmt.Sprintf(`\
+		'if [ $GIT_COMMIT = %s ]
+		then
+		export GIT_AUTHOR_DATE="%s"
+		export GIT_COMMITTER_DATE="%s"
+		fi'
+	`, id, gad, gcd)
+	err = util.RunCmd("git", "filter-branch", "--env-filter", cmd)
+	if err != nil {
+		util.Errorf("getCommitID err (%+v)", err)
+		return
+	}
+	util.Infof("修改时间完成")
 	return
 }
