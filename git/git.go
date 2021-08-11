@@ -21,7 +21,7 @@ func Run() {
 
 func addFile() (err error){
 	from := "/Users/med/mine/goPkgLearn/color/color.go"
-	to := "/Users/med/mine/github/autoAddCommit/color.go"
+	to := "/Users/med/mine/github/autoAddCommit/color/color.go"
 	err = file.CopyFile(to,from)
 	if err != nil {
 		util.Errorf("CopyFile err (%+v)", err)
