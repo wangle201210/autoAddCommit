@@ -33,6 +33,7 @@ func addFile() (err error){
 
 // 提交修改内容到git
 func gitPush(medSdkDir, branch string) (err error) {
+	util.Infof("正在提交代码...")
 	err = util.RunCmdCD(medSdkDir, "git", "add", "-A")
 	if err != nil {
 		return
@@ -49,13 +50,16 @@ func gitPush(medSdkDir, branch string) (err error) {
 			return
 		}
 	} else {
-		util.Infof("无改动，无上传动作\n")
+		util.Infof("无改动，无提交动作")
+		return
 	}
+	util.Infof("提交完成")
 	return
 }
 
 // 获取当前分支名
 func getBranch() (err error) {
+	util.Infof("正在获取当前分支名...")
 	branch, err = util.RunCmdRet("git", "rev-parse", "--abbrev-ref", "HEAD")
 	if err != nil {
 		util.Errorf("getBranch err (%+v)", err)
