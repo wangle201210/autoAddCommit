@@ -1,6 +1,7 @@
 package git
 
 import (
+	"context"
 	"fmt"
 	"git.medlinker.com/wanghouwei/autoAddCommit/file"
 	"git.medlinker.com/wanghouwei/autoAddCommit/util"
@@ -9,23 +10,24 @@ import (
 )
 
 var (
-	branch string
-	files []file.File
+	branch    string
+	files     []file.File
 	startTime time.Time
-	maxTimes = 10
-	baseDir = ""
+	maxTimes  = 100
+	baseDir   = ""
 )
 
-func changeDate()  {
-	//git rev-parse HEAD
+func changeDate() {
 	id, _ := getCommitID()
 	cmd := `if [ $GIT_COMMIT = %s ]; then export GIT_AUTHOR_DATE="%s" export GIT_COMMITTER_DATE="%s"; fi`
 	t := startTime.Format("2006-01-02 15:04:05")
 	cmdString := fmt.Sprintf(cmd, id, t, t)
 	ret, err := util.RunCmdRet("git", "filter-branch", "-f", "--env-filter", cmdString)
-	fmt.Printf("err (%+v)", err)
-	fmt.Printf("ret (%+v)",ret)
-
+	if err != nil {
+		util.Errorf("filter-branch err (%+v)", err)
+		return
+	}
+	util.Infof("git filter-branch (%+v)", ret)
 }
 
 func Run(dir string) {
@@ -34,7 +36,7 @@ func Run(dir string) {
 	dir = "/Users/med/mine/goPkgLearn"
 	baseDir = dir
 	now := time.Now()
-	startTime = now.Add(time.Second * -1 * 60 * 60 * 24 * 30 * 3)
+	startTime = now.Add(time.Second * -1 * 60 * 60 * 24 * 30 * 1)
 	if err := getBranch(); err != nil {
 		util.Errorf("getBranch err (%+v)", err)
 		return
@@ -42,7 +44,7 @@ func Run(dir string) {
 	for i := 1; startTime.Unix() < now.Unix() && i < maxTimes; i++ {
 		util.Infof("=========== 第 %d 次开始 ===========", i)
 		getTime()
-		f, err := addFile();
+		f, err := addFile()
 		if err != nil {
 			return
 		}
@@ -52,11 +54,11 @@ func Run(dir string) {
 	}
 }
 
-func addFile() (f file.File ,err error) {
+func addFile() (f file.File, err error) {
 	f = getFile()
 	from := f.Dir
-	to :=  f.Path
-	err = file.CopyFile(to,from)
+	to := f.Path
+	err = file.CopyFile(to, from)
 	if err != nil {
 		util.Errorf("CopyFile err (%+v)", err)
 		return
@@ -68,18 +70,18 @@ func addFile() (f file.File ,err error) {
 // 提交修改内容到git
 func gitPush(medSdkDir, branch string, f file.File) (err error) {
 	util.Infof("正在提交代码...")
-	err = util.RunCmdCD(medSdkDir, "git", "add", "-A")
+	err = util.RunCmd("git", "add", "-A")
 	if err != nil {
 		return
 	}
 	var gitStatus string
-	gitStatus, _ = util.RunCmdRetCD(medSdkDir, "git", "status", "--porcelain")
+	gitStatus, _ = util.RunCmdRet("git", "status", "--porcelain")
 	if gitStatus != "" {
 		msg := commitMsg(f)
 		msgString := fmt.Sprintf("--message=%s", msg)
 		date := startTime.Unix()
 		dateString := fmt.Sprintf("--date=%d", date)
-		err = util.RunCmdCD(medSdkDir, "git", "commit", msgString, dateString)
+		err = util.RunCmd("git", "commit", msgString, dateString)
 		changeDate()
 		if err != nil {
 			util.Errorf("git commit err (%+v)", err)
@@ -89,13 +91,26 @@ func gitPush(medSdkDir, branch string, f file.File) (err error) {
 		util.Infof("无改动文件")
 		return
 	}
-	err = util.RunCmdCD(medSdkDir, "git", "push", "-f", "origin", branch)
+	push(0)
+	return
+}
+
+func push(restart int64) {
+	if restart > 10 {
+		util.Errorf("git push 超过了 %d 次，不再重试", restart)
+		return
+	}
+	restart++
+	// 10s 内没push 成功就重试
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := util.RunCmdCtx(ctx, "git", "push", "-f", "origin", branch)
 	if err != nil {
-		util.Errorf("git push err (%+v)", err)
+		util.Errorf("git push 第 %d 次 time out", restart)
+		push(restart)
 		return
 	}
 	util.Infof("提交完成")
-	return
 }
 
 // 获取当前分支名
@@ -152,7 +167,7 @@ func getFile() (f file.File) {
 	return
 }
 
-func getTime () {
+func getTime() {
 	// 3 天内必有一次提交, 提交间隔不低于1000s
 	randNum := rand.Int63n(60 * 60 * 24 * 3)
 	if randNum < 1000 {

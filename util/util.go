@@ -1,11 +1,11 @@
 package util
 
 import (
+	"context"
 	"fmt"
+	"github.com/fatih/color"
 	"os/exec"
 	"strings"
-
-	"github.com/fatih/color"
 )
 
 var (
@@ -19,6 +19,14 @@ var flagVerbose bool
 // RunCmd runs the cmd & print output (both stdout & stderr)
 func RunCmd(name string, arg ...string) (err error) {
 	return RunCmdCD("", name, arg...)
+}
+
+func RunCmdCtx(ctx context.Context, name string, arg ...string) error {
+	if out, err := exec.CommandContext(ctx, name, arg...).CombinedOutput(); err != nil {
+		Errorf("RunCmdWithCtx: %s, 提示为: %s", strings.Join(append([]string{name}, arg...), " "), out)
+		return err
+	}
+	return nil
 }
 
 func RunCmdCD(cd, name string, arg ...string) (err error) {
@@ -55,10 +63,9 @@ func logf(format string, args ...interface{}) {
 }
 
 func Infof(format string, args ...interface{}) {
-	color.Green(format, args...)
+	color.Green(format+"\n", args...)
 }
 
 func Errorf(format string, args ...interface{}) {
-	color.Red(format, args...)
+	color.Red(format+"\n", args...)
 }
-

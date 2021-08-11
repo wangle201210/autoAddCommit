@@ -12,7 +12,7 @@ import (
 type File struct {
 	Path string
 	Name string
-	Dir string
+	Dir  string
 }
 
 func CopyFile(to, from string) (err error) {
@@ -23,7 +23,7 @@ func CopyFile(to, from string) (err error) {
 	defer fsrc.Close()
 	p := path.Dir(to)
 	if _, err := os.Stat(p); os.IsNotExist(err) {
-		os.Mkdir(p, 0777) //0777也可以os.ModePerm
+		os.MkdirAll(p, 0777) //0777也可以os.ModePerm
 		os.Chmod(p, 0777)
 
 	}
@@ -52,9 +52,9 @@ func GetFiles(dir string) (result []File) {
 		if !info.IsDir() {
 			if !strings.Contains(path, ".git") &&
 				!strings.Contains(path, ".DS_Store") &&
-				!strings.Contains(path, ".idea"){
+				!strings.Contains(path, ".idea") {
 				result = append(result, File{
-					Dir: path,
+					Dir:  path,
 					Name: info.Name(),
 					Path: s + "/mainFile/" + path[len(dir)+1:],
 				})
