@@ -20,12 +20,14 @@ func Run() {
 }
 
 func addFile() (err error){
-	err = file.CopyFile("/Users/med/mine/github/autoAddCommit/color.go","/Users/med/mine/goPkgLearn/color/color.go")
+	from := "/Users/med/mine/goPkgLearn/color/color.go"
+	to := "/Users/med/mine/github/autoAddCommit/color.go"
+	err = file.CopyFile(to,from)
 	if err != nil {
 		util.Errorf("CopyFile err (%+v)", err)
 		return
 	}
-	util.Infof("addFile: %s", branch)
+	util.Infof("addFile (%s) to %s", from, to)
 	return
 }
 
