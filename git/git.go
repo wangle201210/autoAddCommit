@@ -33,21 +33,26 @@ func changeDate() {
 func Run(dir string) {
 	//changeDate()
 	//return
-	dir = "/Users/med/mine/goPkgLearn"
+	//dir = "/Users/med/mine/goPkgLearn"
 	baseDir = dir
 	now := time.Now()
-	startTime = now.Add(time.Second * -1 * 60 * 60 * 24 * 30 * 1)
+	// 前推4个月
+	startTime = now.Add(time.Second * -1 * 60 * 60 * 24 * 30 * 4)
 	if err := getBranch(); err != nil {
 		util.Errorf("getBranch err (%+v)", err)
 		return
 	}
 	for i := 1; startTime.Unix() < now.Unix() && i < maxTimes; i++ {
 		util.Infof("=========== 第 %d 次开始 ===========", i)
-		getTime()
 		f, err := addFile()
 		if err != nil {
 			return
 		}
+		// 跳过前面40个文件
+		//if i < 40 {
+		//	continue
+		//}
+		getTime()
 		if err := gitPush("./", branch, f); err != nil {
 			return
 		}
