@@ -11,7 +11,7 @@ func Run() {
 }
 
 func addFile() {
-	if err := file.CopyFile("/Users/med/mine/github/autoAddCommit/color/color.go","/Users/med/mine/goPkgLearn/color/color.go"); err != nil {
+	if err := file.CopyFile("/Users/med/mine/github/autoAddCommit/color.go","/Users/med/mine/goPkgLearn/color/color.go"); err != nil {
 		println(err.Error())
 	}
 }
