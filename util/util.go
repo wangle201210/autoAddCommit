@@ -22,7 +22,7 @@ func RunCmdCD(cd, name string, arg ...string) (err error) {
 	if flagVerbose || err != nil {
 		logFunc := logf
 		if err != nil {
-			logFunc = errorf
+			logFunc = Errorf
 		}
 		logFunc("CMD: %s", strings.Join(append([]string{cd, name}, arg...), " "))
 		logFunc(string(out))
@@ -45,15 +45,15 @@ func RunCmdRetCD(cd, name string, arg ...string) (out string, err error) {
 	return
 }
 
-func Infof(format string, args ...interface{}) {
-	color.Green(format, args...)
-}
-
 func logf(format string, args ...interface{}) {
 	fmt.Printf(format+"\n", args...)
 }
 
-func errorf(format string, args ...interface{}) {
+func Infof(format string, args ...interface{}) {
+	color.Green(format, args...)
+}
+
+func Errorf(format string, args ...interface{}) {
 	color.Red(format, args...)
 }
 

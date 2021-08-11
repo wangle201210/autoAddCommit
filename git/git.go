@@ -46,6 +46,7 @@ func gitPush(medSdkDir, branch string) (err error) {
 func getBranch() (err error) {
 	branch, err = util.RunCmdRet("git", "rev-parse", "--abbrev-ref", "HEAD")
 	if err != nil {
+		util.Infof("getBranch err (%+v)", err)
 		return
 	}
 	return
