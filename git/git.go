@@ -92,7 +92,7 @@ func changeTime() (err error) {
 		export GIT_COMMITTER_DATE="%s"
 		fi'
 	`, id, gad, gcd)
-	err = util.RunCmd("git", "filter-branch", "--env-filter", cmd)
+	err = util.RunCmd("git", "filter-branch", "-f", "--env-filter", cmd)
 	if err != nil {
 		util.Errorf("getCommitID err (%+v)", err)
 		return
