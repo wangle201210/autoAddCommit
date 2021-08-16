@@ -1,5 +1,6 @@
 # autoAddCommit
 自动添加git提交记录
+学到东西的话，记得给个star哦
 
 # 运行方式
 ### 有golang环境的情况下   
