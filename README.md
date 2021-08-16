@@ -5,7 +5,7 @@
 ### 有golang环境的情况下   
 1. 修改 cd 后面的路径后 直接运行 `./make.sh` 后输入文件路径   
 2. 运行`go install` 后，到自己对应目录运行 `autoAddCommit` 再输入文件路径   
-### 没golang环境的 就直接下载二进制文件使用
+### 没golang环境的 就直接下载[二进制文件](https://github.com/wangle201210/autoAddCommit/releases/)使用
 
 # 常见问题
 1. 项目最后没成功push  
