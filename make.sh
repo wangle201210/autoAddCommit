@@ -1,5 +1,5 @@
 #!/bin/bash
 
 go install
-cd /Users/med/mine/github/GoWeb
+cd /Users/wanna/mine/github/goCms
 autoAddCommit

@@ -25,7 +25,6 @@ func CopyFile(to, from string) (err error) {
 	if _, err := os.Stat(p); os.IsNotExist(err) {
 		os.MkdirAll(p, 0777) //0777也可以os.ModePerm
 		os.Chmod(p, 0777)
-
 	}
 	fdest, err := os.Create(to)
 	if err != nil {
@@ -42,7 +41,7 @@ func CopyFile(to, from string) (err error) {
 
 // files all files with suffix
 func GetFiles(dir string) (result []File) {
-	s, err := getCurrentPath()
+	s, err := GetCurrentPath()
 	if err != nil {
 		util.Errorf("getCurrentPath err (%+v)", err)
 		panic("getCurrentPath")
@@ -65,11 +64,25 @@ func GetFiles(dir string) (result []File) {
 	return
 }
 
-func getCurrentPath() (string, error) {
+func GetCurrentPath() (string, error) {
 	getwd, err := os.Getwd()
 	if err != nil {
 		util.Errorf("Getwd err (%+v)", err)
 		return "", err
 	}
 	return getwd, nil
+}
+
+func CreateFile(to string) {
+	p := path.Dir(to)
+	if _, err := os.Stat(p); os.IsNotExist(err) {
+		os.MkdirAll(p, 0777) //0777也可以os.ModePerm
+		os.Chmod(p, 0777)
+	}
+	fdest, err := os.Create(to)
+	if err != nil {
+		util.Errorf("Create file err (%+v)", err)
+		return
+	}
+	defer fdest.Close()
 }

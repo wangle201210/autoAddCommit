@@ -1,16 +1,14 @@
 package git
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
 	"git.medlinker.com/wanghouwei/autoAddCommit/file"
 	"git.medlinker.com/wanghouwei/autoAddCommit/util"
-	"io"
 	"math/rand"
-	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,20 +18,27 @@ var (
 	startTime time.Time
 	maxTimes  = 100
 	baseDir   = ""
-	commitTimes = 50
+	// commit 的数量
+	commitTimes = 70
+	// 前面100 天 去分 commit
+	seconds = 100 * 24 * 60 * 60
 )
 
 type commit struct {
 	Date string `json:"date"`
 	Hash string `json:"hash"`
-	Msg string `json:"msg"`
+	Msg  string `json:"msg"`
 }
 
-func changeDate() {
-	id, _ := getCommitID()
+func changeDate(hash, t string) {
+	if hash == "" {
+		hash, _ = getCommitID()
+	}
+	if t == "" {
+		t = startTime.Format("2006-01-02 15:04:05")
+	}
 	cmd := `if [ $GIT_COMMIT = %s ]; then export GIT_AUTHOR_DATE="%s" export GIT_COMMITTER_DATE="%s"; fi`
-	t := startTime.Format("2006-01-02 15:04:05")
-	cmdString := fmt.Sprintf(cmd, id, t, t)
+	cmdString := fmt.Sprintf(cmd, hash, t, t)
 	ret, err := util.RunCmdRet("git", "filter-branch", "-f", "--env-filter", cmdString)
 	if err != nil {
 		util.Errorf("filter-branch err (%+v)", err)
@@ -45,17 +50,21 @@ func changeDate() {
 func Run(dir string) {
 	now := time.Now()
 	// 前推4个月
-	startTime = now.Add(time.Second * -1 * 60 * 60 * 24 * 30 * 4)
+	startTime = now.Add(time.Second * time.Duration(-1*seconds))
 	//changeDate()
 	//return
 	//dir = "/Users/med/mine/goPkgLearn"
 	// 最后50次
 	log := getCommitLog(commitTimes)
-	if len(log) == commitTimes {
+	if len(log) >= commitTimes {
 		util.Infof("commit log 已经够分配")
-		deviceCommit(log)
+		//deviceCommitTime(log)
+		commitTime := deviceCommitTime(log)
+		pushCommitTime(log, commitTime)
+		push(0)
 		return
 	}
+	util.Infof("commit log 共 (%d) 不够分配，自动生成提交记录中...", len(log))
 	baseDir = dir
 	if err := getBranch(); err != nil {
 		util.Errorf("getBranch err (%+v)", err)
@@ -72,10 +81,11 @@ func Run(dir string) {
 		//	continue
 		//}
 		getTime()
-		if err := gitPush("./", branch, f); err != nil {
+		if err := addCommit("./", branch, f); err != nil {
 			return
 		}
 	}
+	push(0)
 }
 
 func addFile() (f file.File, err error) {
@@ -92,7 +102,7 @@ func addFile() (f file.File, err error) {
 }
 
 // 提交修改内容到git
-func gitPush(medSdkDir, branch string, f file.File) (err error) {
+func addCommit(medSdkDir, branch string, f file.File) (err error) {
 	util.Infof("正在提交代码...")
 	err = util.RunCmd("git", "add", "-A")
 	if err != nil {
@@ -106,7 +116,7 @@ func gitPush(medSdkDir, branch string, f file.File) (err error) {
 		date := startTime.Unix()
 		dateString := fmt.Sprintf("--date=%d", date)
 		err = util.RunCmd("git", "commit", msgString, dateString)
-		changeDate()
+		changeDate("", "")
 		if err != nil {
 			util.Errorf("git commit err (%+v)", err)
 			return
@@ -115,7 +125,6 @@ func gitPush(medSdkDir, branch string, f file.File) (err error) {
 		util.Infof("无改动文件")
 		return
 	}
-	push(0)
 	return
 }
 
@@ -125,8 +134,8 @@ func push(restart int64) {
 		return
 	}
 	restart++
-	// 10s 内没push 成功就重试
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// 30s 内没push 成功就重试
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	err := util.RunCmdCtx(ctx, "git", "push", "-f", "origin", branch)
 	if err != nil {
@@ -204,25 +213,18 @@ func getTime() {
 // 如果以前的commit 够用了，则直接随机分配
 //git log -n 5 --pretty=format:"%cI | %H | %s" > abc.txt
 func getCommitLog(times int) (res []commit) {
-	err := util.RunCmd("git", "log", "-n", strconv.Itoa(times), "--pretty=format:\"{\\\"date\\\":\\\"%cI\\\",\\\"hash\\\":\\\"%H\\\",\\\"msg\\\":\\\"%s\\\"}\" > commit.log")
+	pwd, _ := file.GetCurrentPath()
+	pretty := fmt.Sprintf("--pretty=format:{\"date\":\"%%cI\",\"hash\":\"%%H\"}")
+	r, err := util.RunCmdRetCD(pwd, "git", "log", "-n", strconv.Itoa(times), pretty)
 	if err != nil {
 		util.Errorf("git log err (%+v)", err)
 		return
 	}
-	// 读取
-	f, err := os.Open("commit.log")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	rd := bufio.NewReader(f)
-	for {
-		line, err := rd.ReadBytes('\n') //以'\n'为结束符读入一行
-		if err != nil || io.EOF == err {
-			break
-		}
+	split := strings.Split(r, "\n")
+	for i, s := range split {
+		util.Infof("commit %d: %s)", i, s)
 		r := commit{}
-		if err = json.Unmarshal(line, &r); err != nil {
+		if err = json.Unmarshal([]byte(s), &r); err != nil {
 			util.Errorf("Unmarshal err (%+v)", err)
 			return
 		}
@@ -231,16 +233,47 @@ func getCommitLog(times int) (res []commit) {
 	return
 }
 
-func deviceCommit(list []commit)  {
-	l :=  len(list)
+func deviceCommitTime(list []commit) (timeList []int) {
+	l := len(list)
 	// 4个月
-	total := 60 * 60 * 24 * 30 * 4
-	timeList := []int{total}
+	total := seconds
+	timeList = []int{}
 	for i := 0; i < len(list); i++ {
-		reduce := util.DoubleAverage(l, total)
-		total-= reduce
-		l--
-		println(reduce)
 		timeList = append(timeList, total)
+		reduce := util.DoubleAverage(l, total)
+		total -= reduce
+		l--
 	}
+	fmt.Printf("%+v", timeList)
+	if timeList[len(timeList)-1] > 60*60*24*3 || timeList[len(timeList)-1] < 60*60 {
+		util.Infof("最后一次分配超过3天，重新分配...")
+		return deviceCommitTime(list)
+	}
+	util.Infof("时间切分完成")
+	return
+}
+
+func pushCommitTime(commitList []commit, timeList []int) {
+	lc, lt := len(commitList), len(timeList)
+	if lc != lt {
+		util.Errorf("lc(%d) != lt (%d)", lc, lt)
+		panic("出错啦，长度咋不相等呢？")
+		return
+	}
+	// 时间反着得
+	// 这里不能开协程
+	//eg := errgroup.Group{}
+	for i, c := range timeList {
+		util.Infof("=========== 修改第 %d 次开始 ===========", i+1)
+		format := time.Now().Add(time.Second * time.Duration(c*-1)).Format("2006-01-02 15:04:05")
+		//eg.Go(func() error {
+			changeDate(commitList[i].Hash, format)
+			//return nil
+		//})
+	}
+	//if err := eg.Wait(); err != nil {
+	//	util.Errorf("errgroup err (%+v)", err)
+	//	return
+	//}
+	return
 }

@@ -60,6 +60,14 @@ func RunCmdRetCD(cd, name string, arg ...string) (out string, err error) {
 	return
 }
 
+func JustRun(cd, name string, arg ...string) (err error) {
+	logf("CMD: %s", strings.Join(append([]string{name}, arg...), " "))
+	cmd := exec.Command(name, arg...)
+	cmd.Dir = cd
+	err = cmd.Run()
+	return
+}
+
 func logf(format string, args ...interface{}) {
 	fmt.Printf(format+"\n", args...)
 }
@@ -73,13 +81,14 @@ func Errorf(format string, args ...interface{}) {
 }
 
 //二倍均值算法,count剩余个数,amount剩余时间
+// 间隔在 5小时 到 3天之间
 func DoubleAverage(count, total int) int {
 	if count == 1 {
 		//返回剩余时间
 		return total
 	}
-	// 提交间隔至少 1h
-	min := 60 * 60
+	// 提交间隔至少 5h
+	min := 60 * 60 * 5
 	//计算最大可用时间,min最小是1分钱,减去的min,下面会加上,避免出现0分钱
 	max := total - min*count
 	//计算最大可用平均值
@@ -90,5 +99,8 @@ func DoubleAverage(count, total int) int {
 	rand.Seed(time.Now().UnixNano())
 	//加min是为了避免出现0值,上面也减去了min
 	x := rand.Intn(avg2) + min
+	if x > 60*60*24*3 {
+		return DoubleAverage(count, total)
+	}
 	return x
 }
