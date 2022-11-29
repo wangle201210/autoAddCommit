@@ -228,7 +228,7 @@ func getCommitLog(times int) (res []commit) {
 			util.Errorf("Unmarshal err (%+v)", err)
 			return
 		}
-		res = append(res, r)
+		res = append([]commit{r}, res...)
 	}
 	return
 }
@@ -267,8 +267,8 @@ func pushCommitTime(commitList []commit, timeList []int) {
 		util.Infof("=========== 修改第 %d 次开始 ===========", i+1)
 		format := time.Now().Add(time.Second * time.Duration(c*-1)).Format("2006-01-02 15:04:05")
 		//eg.Go(func() error {
-			changeDate(commitList[i].Hash, format)
-			//return nil
+		changeDate(commitList[i].Hash, format)
+		//return nil
 		//})
 	}
 	//if err := eg.Wait(); err != nil {
